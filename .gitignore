@@ -1,0 +1,8 @@
+node_modules/
+dist/
+downloads/
+output/
+uploads/
+settings.json
+*.log
+.env

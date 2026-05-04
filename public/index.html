@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Subtitle Extractor - Trích xuất phụ đề từ video</title>
+  <meta name="description" content="Trích xuất subtitle từ video TikTok, Facebook thành file text. Hỗ trợ tải video và nhận diện giọng nói tiếng Việt.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background effects -->
+  <div class="bg-gradient"></div>
+  <div class="bg-grid"></div>
+  <div class="floating-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header" id="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1>SubExtract</h1>
+          <p class="tagline">Trích xuất phụ đề từ video</p>
+        </div>
+      </div>
+      <div class="header-status" id="headerStatus">
+        <span class="status-dot"></span>
+        <span>Đang kiểm tra...</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Input Section -->
+      <section class="card input-section" id="inputSection">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Nhập video
+          </h2>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs" id="inputTabs">
+          <button class="tab active" data-tab="url" id="tabUrl">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Dán link
+          </button>
+          <button class="tab" data-tab="file" id="tabFile">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+            Upload file
+          </button>
+          <button class="tab" data-tab="translate" id="tabTranslate">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            Dịch subtitle
+          </button>
+          <button class="tab" data-tab="settings" id="tabSettings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Cài đặt
+          </button>
+        </div>
+
+        <!-- URL Input -->
+        <div class="tab-content active" id="contentUrl">
+          <div class="url-input-group">
+            <div class="url-input-wrapper">
+              <svg class="url-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              <input type="text" id="urlInput" placeholder="Dán link TikTok, Facebook, YouTube..." autocomplete="off">
+              <button class="btn-paste" id="btnPaste" title="Dán từ clipboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              </button>
+            </div>
+            <button class="btn btn-primary btn-download" id="btnDownload">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Tải & Trích xuất</span>
+            </button>
+          </div>
+          <div class="supported-platforms">
+            <span class="platform-badge tiktok">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1 0-5.78 2.92 2.92 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 3 15.57 6.33 6.33 0 0 0 9.37 22a6.33 6.33 0 0 0 6.33-6.33V9.16a8.18 8.18 0 0 0 3.89.96V6.69z"/></svg>
+              TikTok
+            </span>
+            <span class="platform-badge facebook">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              Facebook
+            </span>
+            <span class="platform-badge youtube">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/><polygon fill="#fff" points="9.545 15.568 15.818 12 9.545 8.432"/></svg>
+              YouTube
+            </span>
+            <span class="platform-badge instagram">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+              Instagram
+            </span>
+          </div>
+        </div>
+
+        <!-- File Upload -->
+        <div class="tab-content" id="contentFile">
+          <div class="upload-zone" id="uploadZone">
+            <div class="upload-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </div>
+            <p class="upload-text">Kéo thả file video/audio vào đây</p>
+            <p class="upload-subtext">hoặc click để chọn file</p>
+            <p class="upload-formats">MP4, MOV, AVI, MKV, WEBM, MP3, WAV, M4A • Tối đa 500MB</p>
+            <input type="file" id="fileInput" accept="video/*,audio/*,.mp4,.mov,.avi,.mkv,.webm,.mp3,.wav,.m4a,.flac,.ogg" hidden>
+          </div>
+        </div>
+
+        <!-- Translate Tab -->
+        <div class="tab-content" id="contentTranslate">
+          <div class="translate-controls">
+            <!-- Folder/File Picker -->
+            <div class="picker-buttons">
+              <button class="btn btn-secondary picker-btn" id="btnPickFolder" title="Chọn thư mục">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <span>Chọn thư mục</span>
+              </button>
+              <button class="btn btn-secondary picker-btn" id="btnPickFiles" title="Chọn file video/subtitle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                <span>Chọn files</span>
+              </button>
+              <!-- Hidden browser-native file inputs -->
+              <input type="file" id="folderPicker" webkitdirectory directory multiple hidden>
+              <input type="file" id="filePicker" multiple accept=".mp4,.mkv,.avi,.mov,.webm,.mp3,.wav,.m4a,.flac,.ogg,.srt,.txt,.vtt,.ass,.ssa,.sub" hidden>
+            </div>
+            <div class="folder-input-group">
+              <div class="url-input-wrapper">
+                <svg class="url-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                <input type="text" id="folderInput" placeholder="Hoặc paste đường dẫn thư mục rồi nhấn Quét..." autocomplete="off">
+              </div>
+              <button class="btn btn-primary" id="btnScanFolder">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <span>Quét</span>
+              </button>
+            </div>
+
+            <!-- Language Selectors -->
+            <div class="lang-row">
+              <div class="lang-select-group">
+                <label for="fromLang">Ngôn ngữ gốc</label>
+                <select id="fromLang" class="lang-select">
+                  <option value="auto" selected>Tự động nhận diện</option>
+                </select>
+              </div>
+              <div class="lang-arrow">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </div>
+              <div class="lang-select-group">
+                <label for="toLang">Ngôn ngữ đích</label>
+                <select id="toLang" class="lang-select">
+                  <option value="en" selected>English</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Translation Engine Selector -->
+            <div class="engine-row" id="engineRow">
+              <label>Engine dịch:</label>
+              <div class="engine-options" id="engineOptions">
+                <label class="engine-option selected" data-engine="google">
+                  <input type="radio" name="engine" value="google" checked>
+                  <div class="engine-card">
+                    <span class="engine-icon">🌐</span>
+                    <div class="engine-info">
+                      <span class="engine-name">Google Translate</span>
+                      <span class="engine-desc">Miễn phí, cơ bản</span>
+                    </div>
+                    <span class="engine-status configured">FREE</span>
+                  </div>
+                </label>
+                <label class="engine-option" data-engine="gemini">
+                  <input type="radio" name="engine" value="gemini">
+                  <div class="engine-card">
+                    <span class="engine-icon">✨</span>
+                    <div class="engine-info">
+                      <span class="engine-name">Gemini Flash</span>
+                      <span class="engine-desc">Chất lượng cao, rẻ</span>
+                    </div>
+                    <span class="engine-status" id="statusGemini">Chưa cấu hình</span>
+                  </div>
+                </label>
+                <label class="engine-option" data-engine="openai">
+                  <input type="radio" name="engine" value="openai">
+                  <div class="engine-card">
+                    <span class="engine-icon">🤖</span>
+                    <div class="engine-info">
+                      <span class="engine-name">GPT-4.1 nano</span>
+                      <span class="engine-desc">Cực rẻ, chất lượng tốt</span>
+                    </div>
+                    <span class="engine-status" id="statusOpenai">Chưa cấu hình</span>
+                  </div>
+                </label>
+                <label class="engine-option" data-engine="deepl">
+                  <input type="radio" name="engine" value="deepl">
+                  <div class="engine-card">
+                    <span class="engine-icon">📘</span>
+                    <div class="engine-info">
+                      <span class="engine-name">DeepL</span>
+                      <span class="engine-desc">Chuyên nghiệp</span>
+                    </div>
+                    <span class="engine-status" id="statusDeepl">Chưa cấu hình</span>
+                  </div>
+                </label>
+                <label class="engine-option" data-engine="microsoft">
+                  <input type="radio" name="engine" value="microsoft">
+                  <div class="engine-card">
+                    <span class="engine-icon">🔷</span>
+                    <div class="engine-info">
+                      <span class="engine-name">Microsoft</span>
+                      <span class="engine-desc">Free 2M chars/tháng</span>
+                    </div>
+                    <span class="engine-status" id="statusMicrosoft">Chưa cấu hình</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- API Settings Toggle (removed - now a dedicated tab) -->
+
+            <!-- Whisper model for videos without subtitles -->
+            <div class="extract-model-row" id="extractModelRow" style="display:none;">
+              <label>Model trích xuất (cho video chưa có subtitle):</label>
+              <select id="extractModel" class="lang-select">
+                <option value="tiny">Tiny - Nhanh</option>
+                <option value="base" selected>Base - Cân bằng</option>
+                <option value="small">Small - Tốt</option>
+                <option value="medium">Medium - Cao</option>
+                <option value="large-v3">Large v3 - Tốt nhất</option>
+              </select>
+            </div>
+
+            <!-- Output folder selection -->
+            <div class="output-folder-row" id="outputFolderRow" style="display:none;">
+              <label>Lưu file dịch vào:</label>
+              <div class="output-options">
+                <label class="radio-option">
+                  <input type="radio" name="outputMode" value="same" id="outputModeSame" checked>
+                  <span>Cùng thư mục file gốc</span>
+                </label>
+                <label class="radio-option">
+                  <input type="radio" name="outputMode" value="custom" id="outputModeCustom">
+                  <span>Thư mục khác:</span>
+                </label>
+              </div>
+              <div class="output-folder-input" id="outputFolderInput" style="display:none;">
+                <div class="output-folder-row-inner">
+                  <input type="text" id="outputFolder" placeholder="D:\path\to\output\folder..." autocomplete="off">
+                  <button class="btn btn-sm btn-secondary" id="btnPickOutputFolder" type="button">Chọn</button>
+                </div>
+              </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS TAB (standalone) ============ -->
+      <section class="card settings-card" id="settingsSection" style="display:none;">
+        <div class="settings-page">
+          <div class="settings-section">
+            <h3>🔑 API Keys</h3>
+            <p class="api-settings-note">API keys được lưu trên máy của bạn (settings.json). Không gửi qua mạng.</p>
+
+            <div class="api-key-group" id="keyGroupGemini">
+              <div class="api-key-header">
+                <span>✨ Gemini API Key</span>
+                <a href="https://aistudio.google.com/apikey" target="_blank" class="api-link">Lấy key miễn phí →</a>
+              </div>
+              <div class="api-key-input-row">
+                <input type="password" id="inputKeyGemini" placeholder="AIzaSy..." autocomplete="off">
+                <button class="btn btn-sm btn-secondary" onclick="testKey('gemini')">Test</button>
+                <button class="btn btn-sm btn-primary" onclick="saveKey('gemini')">Lưu</button>
+              </div>
+              <div class="api-key-status" id="keyStatusGemini"></div>
+            </div>
+
+            <div class="api-key-group" id="keyGroupOpenai">
+              <div class="api-key-header">
+                <span>🤖 OpenAI API Key</span>
+                <a href="https://platform.openai.com/api-keys" target="_blank" class="api-link">Lấy key →</a>
+              </div>
+              <div class="api-key-input-row">
+                <input type="password" id="inputKeyOpenai" placeholder="sk-..." autocomplete="off">
+                <button class="btn btn-sm btn-secondary" onclick="testKey('openai')">Test</button>
+                <button class="btn btn-sm btn-primary" onclick="saveKey('openai')">Lưu</button>
+              </div>
+              <div class="api-key-status" id="keyStatusOpenai"></div>
+            </div>
+
+            <div class="api-key-group" id="keyGroupDeepl">
+              <div class="api-key-header">
+                <span>📘 DeepL API Key</span>
+                <a href="https://www.deepl.com/pro-api" target="_blank" class="api-link">Đăng ký free →</a>
+              </div>
+              <div class="api-key-input-row">
+                <input type="password" id="inputKeyDeepl" placeholder="xxxxxxxx-xxxx-..." autocomplete="off">
+                <button class="btn btn-sm btn-secondary" onclick="testKey('deepl')">Test</button>
+                <button class="btn btn-sm btn-primary" onclick="saveKey('deepl')">Lưu</button>
+              </div>
+              <div class="api-key-status" id="keyStatusDeepl"></div>
+            </div>
+
+            <div class="api-key-group" id="keyGroupMicrosoft">
+              <div class="api-key-header">
+                <span>🔷 Microsoft Translator Key</span>
+                <a href="https://portal.azure.com/#create/Microsoft.CognitiveServicesTextTranslation" target="_blank" class="api-link">Tạo trên Azure →</a>
+              </div>
+              <div class="api-key-input-row">
+                <input type="password" id="inputKeyMicrosoft" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+                <button class="btn btn-sm btn-secondary" onclick="testKey('microsoft')">Test</button>
+                <button class="btn btn-sm btn-primary" onclick="saveKey('microsoft')">Lưu</button>
+              </div>
+              <div class="api-key-input-row" style="margin-top:6px;">
+                <input type="text" id="inputMsRegion" placeholder="Region (mặc định: southeastasia)" autocomplete="off">
+              </div>
+              <div class="api-key-status" id="keyStatusMicrosoft"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>📁 Whisper & Model</h3>
+
+            <div class="api-key-group" id="modelCacheDirGroup">
+              <div class="api-key-header">
+                <span>📂 Thư mục lưu Model</span>
+              </div>
+              <div class="api-key-input-row">
+                <input type="text" id="inputModelCacheDir" placeholder="Mặc định: C:\Users\...\.cache\huggingface" autocomplete="off">
+                <button class="btn btn-sm btn-secondary" id="btnPickModelCache" type="button">Chọn</button>
+                <button class="btn btn-sm btn-primary" id="btnSaveModelCache" type="button">Lưu</button>
+              </div>
+              <div class="api-key-status" id="modelCacheStatus"></div>
+            </div>
+
+            <div class="api-key-group">
+              <div class="api-key-header">
+                <span>🧠 Whisper Engine</span>
+              </div>
+              <div class="settings-info">
+                <span id="whisperEngineInfo">Đang kiểm tra...</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>ℹ️ Thông tin</h3>
+            <div class="settings-info-grid">
+              <div class="info-item">
+                <span class="info-label">Phiên bản</span>
+                <span class="info-value">1.0.0</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Dữ liệu</span>
+                <span class="info-value">settings.json</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+          <!-- Scan Results -->
+          <div class="scan-results" id="scanResults" style="display:none;">
+            <div class="scan-header">
+              <span class="scan-count" id="scanCount">0 files</span>
+              <div class="scan-actions">
+                <button class="btn btn-sm btn-secondary" id="btnSelectAll">Chọn tất cả</button>
+                <button class="btn btn-sm btn-secondary" id="btnDeselectAll">Bỏ chọn</button>
+                <button class="btn btn-sm btn-danger" id="btnClearList">✕ Xoá danh sách</button>
+              </div>
+            </div>
+            <div class="file-filters" id="fileFilters">
+              <button class="filter-btn active" data-filter="all">Tất cả</button>
+              <button class="filter-btn" data-filter="subtitle">📄 Chỉ Subtitle</button>
+              <button class="filter-btn" data-filter="video">🎬 Chỉ Video</button>
+              <button class="filter-btn" data-filter="no-sub">⚠️ Cần trích xuất</button>
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <button class="btn btn-primary btn-transcribe" id="btnBatchTranslate">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+              <span>Dịch các file đã chọn</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Model Selection -->
+      <section class="card model-section" id="modelSection" style="display:none;">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Cài đặt trích xuất
+          </h2>
+        </div>
+        <div class="model-grid">
+          <label class="model-option" data-model="tiny">
+            <input type="radio" name="model" value="tiny">
+            <div class="model-card">
+              <div class="model-name">Tiny</div>
+              <div class="model-desc">Nhanh nhất, độ chính xác thấp</div>
+              <div class="model-size">~75MB RAM</div>
+            </div>
+          </label>
+          <label class="model-option selected" data-model="base">
+            <input type="radio" name="model" value="base" checked>
+            <div class="model-card">
+              <div class="model-name">Base</div>
+              <div class="model-desc">Cân bằng tốc độ & chất lượng</div>
+              <div class="model-size">~150MB RAM</div>
+              <span class="model-badge">Khuyên dùng</span>
+            </div>
+          </label>
+          <label class="model-option" data-model="small">
+            <input type="radio" name="model" value="small">
+            <div class="model-card">
+              <div class="model-name">Small</div>
+              <div class="model-desc">Chất lượng tốt</div>
+              <div class="model-size">~500MB RAM</div>
+            </div>
+          </label>
+          <label class="model-option" data-model="medium">
+            <input type="radio" name="model" value="medium">
+            <div class="model-card">
+              <div class="model-name">Medium</div>
+              <div class="model-desc">Chất lượng cao</div>
+              <div class="model-size">~1.5GB RAM</div>
+            </div>
+          </label>
+          <label class="model-option" data-model="large-v3">
+            <input type="radio" name="model" value="large-v3">
+            <div class="model-card">
+              <div class="model-name">Large v3</div>
+              <div class="model-desc">Chính xác nhất, chậm nhất</div>
+              <div class="model-size">~3GB RAM</div>
+            </div>
+          </label>
+        </div>
+        <button class="btn btn-primary btn-transcribe" id="btnTranscribe">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          <span>Bắt đầu trích xuất</span>
+        </button>
+      </section>
+
+      <!-- Progress Section -->
+      <section class="card progress-section" id="progressSection" style="display:none;">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+            Đang xử lý
+          </h2>
+        </div>
+        <div class="progress-content">
+          <div class="progress-spinner">
+            <div class="spinner"></div>
+          </div>
+          <div class="progress-info">
+            <p class="progress-text" id="progressText">Đang chuẩn bị...</p>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Result Section -->
+      <section class="card result-section" id="resultSection" style="display:none;">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            Kết quả trích xuất
+          </h2>
+          <div class="result-actions">
+            <button class="btn btn-secondary btn-sm" id="btnCopy" title="Copy text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <a class="btn btn-primary btn-sm" id="btnDownloadTxt" download>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Tải file .txt
+            </a>
+          </div>
+        </div>
+        <div class="result-text-wrapper">
+          <pre class="result-text" id="resultText"></pre>
+        </div>
+        <div class="result-footer">
+          <button class="btn btn-secondary" id="btnNewJob">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Trích xuất video mới
+          </button>
+        </div>
+      </section>
+
+      <!-- Batch Translation Progress/Results -->
+      <section class="card batch-section" id="batchSection" style="display:none;">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>
+            Kết quả dịch
+          </h2>
+        </div>
+        <div class="batch-progress" id="batchProgress">
+          <div class="progress-content">
+            <div class="progress-spinner">
+              <div class="spinner" id="batchSpinner"></div>
+            </div>
+            <div class="progress-info">
+              <p class="progress-text" id="batchProgressText">Đang xử lý...</p>
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar" id="batchProgressBar"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="batch-results-list" id="batchResultsList"></div>
+        <div class="result-footer" id="batchFooter" style="display:none;">
+          <button class="btn btn-secondary" id="btnNewBatch">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Dịch batch mới
+          </button>
+        </div>
+      </section>
+
+      <!-- Error Section -->
+      <section class="card error-section" id="errorSection" style="display:none;">
+        <div class="error-content">
+          <div class="error-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <h3>Có lỗi xảy ra</h3>
+          <p class="error-message" id="errorMessage"></p>
+          <button class="btn btn-secondary" id="btnRetry">Thử lại</button>
+        </div>
+      </section>
+
+      <!-- Setup Guide (shown when dependencies missing) -->
+      <section class="card setup-section" id="setupSection" style="display:none;">
+        <div class="card-header">
+          <h2>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Hướng dẫn cài đặt
+          </h2>
+        </div>
+        <div class="setup-steps">
+          <div class="setup-step" id="setupYtdlp">
+            <div class="step-status">
+              <span class="step-icon pending">1</span>
+            </div>
+            <div class="step-content">
+              <h3>yt-dlp <span class="step-badge" id="badgeYtdlp">Chưa cài</span></h3>
+              <p>Công cụ tải video từ TikTok, Facebook, YouTube...</p>
+              <code>pip install yt-dlp</code>
+            </div>
+          </div>
+          <div class="setup-step" id="setupWhisper">
+            <div class="step-status">
+              <span class="step-icon pending">2</span>
+            </div>
+            <div class="step-content">
+              <h3>faster-whisper <span class="step-badge" id="badgeWhisper">Chưa cài</span></h3>
+              <p>AI nhận diện giọng nói tiếng Việt (khuyên dùng faster-whisper)</p>
+              <code>pip install faster-whisper</code>
+              <p class="step-alt">Hoặc dùng bản gốc: <code>pip install openai-whisper</code></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Sử dụng <strong>Whisper AI</strong> để nhận diện giọng nói • <strong>yt-dlp</strong> để tải video</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
