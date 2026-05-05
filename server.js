@@ -348,6 +348,7 @@ app.post('/api/translate/:jobId', async (req, res) => {
 });
 
 // Scan a local folder for video/subtitle files
+// Smart mode: if subtitles are found, only return subtitles (skip videos for speed)
 app.post('/api/scan-folder', (req, res) => {
   const { folderPath } = req.body;
   if (!folderPath) return res.status(400).json({ error: 'Chưa nhập đường dẫn thư mục' });
@@ -362,10 +363,11 @@ app.post('/api/scan-folder', (req, res) => {
   }
 
   const videoExts = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.mp3', '.wav', '.m4a', '.flac', '.ogg'];
-  const subtitleExts = ['.txt', '.srt', '.vtt', '.sub', '.ass', '.ssa'];
-  const items = [];
+  const subtitleExts = ['.srt', '.vtt', '.sub', '.ass', '.ssa'];
+  const subtitleItems = [];
+  const videoItems = [];
 
-  // Recursive scan function
+  // Recursive scan function — collect subtitles and videos separately
   function scanDir(dirPath) {
     let entries;
     try { entries = fs.readdirSync(dirPath); } catch { return; }
@@ -376,33 +378,17 @@ app.post('/api/scan-folder', (req, res) => {
       try { fstat = fs.statSync(fullPath); } catch { continue; }
 
       if (fstat.isDirectory()) {
-        scanDir(fullPath); // Recurse into subfolder
+        scanDir(fullPath);
         continue;
       }
 
       if (!fstat.isFile()) continue;
 
       const ext = path.extname(entry).toLowerCase();
-      // Display name = relative path from root folder
       const relPath = path.relative(folderPath, fullPath);
 
-      if (videoExts.includes(ext)) {
-        const baseName = path.basename(entry, ext);
-        const fileDir = path.dirname(fullPath);
-        const existingSub = subtitleExts
-          .map(se => path.join(fileDir, baseName + se))
-          .find(p => fs.existsSync(p));
-
-        items.push({
-          name: relPath,
-          path: fullPath,
-          type: 'video',
-          hasSubtitle: !!existingSub,
-          subtitlePath: existingSub || null,
-          size: fstat.size,
-        });
-      } else if (subtitleExts.includes(ext)) {
-        items.push({
+      if (subtitleExts.includes(ext)) {
+        subtitleItems.push({
           name: relPath,
           path: fullPath,
           type: 'subtitle',
@@ -410,12 +396,29 @@ app.post('/api/scan-folder', (req, res) => {
           subtitlePath: fullPath,
           size: fstat.size,
         });
+      } else if (videoExts.includes(ext)) {
+        videoItems.push({
+          name: relPath,
+          path: fullPath,
+          type: 'video',
+          hasSubtitle: false,
+          subtitlePath: null,
+          size: fstat.size,
+        });
       }
     }
   }
 
   scanDir(folderPath);
-  res.json({ folderPath, items, total: items.length });
+
+  // Smart filtering: if subtitles exist, only return subtitles (no need to process videos)
+  // If no subtitles found, return videos so user can extract subtitles first
+  const hasSubtitles = subtitleItems.length > 0;
+  const items = hasSubtitles ? subtitleItems : videoItems;
+  const mode = hasSubtitles ? 'subtitles-only' : 'videos-only';
+
+  console.log(`[scan] ${folderPath}: found ${subtitleItems.length} subtitles, ${videoItems.length} videos → mode: ${mode}`);
+  res.json({ folderPath, items, total: items.length, mode, subtitleCount: subtitleItems.length, videoCount: videoItems.length });
 });
 
 // Batch translate files from a folder
