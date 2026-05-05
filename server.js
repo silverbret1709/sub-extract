@@ -82,10 +82,12 @@ function checkWhisper() {
 // ============ API ROUTES ============
 
 // Health check & dependency status
+const pkg = require('./package.json');
 app.get('/api/status', (req, res) => {
   const ytdlp = checkYtDlp();
   const whisper = checkWhisper();
   res.json({
+    version: pkg.version,
     ytdlp: ytdlp,
     whisper: whisper,
     ready: ytdlp && whisper
@@ -1046,7 +1048,7 @@ app.post('/api/git/pull', (req, res) => {
 // ============ START SERVER ============
 app.listen(PORT, () => {
   console.log(`\n╔══════════════════════════════════════════════════╗`);
-  console.log(`║   Video Subtitle Extractor                       ║`);
+  console.log(`║   SubExtract v${pkg.version}                              ║`);
   console.log(`║   http://localhost:${PORT}                          ║`);
   console.log(`╚══════════════════════════════════════════════════╝\n`);
   const ytdlp = checkYtDlp();
