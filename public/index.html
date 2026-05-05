@@ -203,8 +203,8 @@
                   <div class="engine-card">
                     <span class="engine-icon">🤖</span>
                     <div class="engine-info">
-                      <span class="engine-name">GPT-4.1 nano</span>
-                      <span class="engine-desc">Cực rẻ, chất lượng tốt</span>
+                      <span class="engine-name">OpenAI GPT</span>
+                      <span class="engine-desc">Nhiều model, chất lượng tốt</span>
                     </div>
                     <span class="engine-status" id="statusOpenai">Chưa cấu hình</span>
                   </div>
@@ -229,6 +229,34 @@
                       <span class="engine-desc">Free 2M chars/tháng</span>
                     </div>
                     <span class="engine-status" id="statusMicrosoft">Chưa cấu hình</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- OpenAI Model Selector (shown when OpenAI engine is selected) -->
+            <div class="openai-model-row" id="openaiModelRow" style="display:none;">
+              <label>Model GPT:</label>
+              <div class="openai-model-options">
+                <label class="openai-model-option">
+                  <input type="radio" name="openaiModel" value="gpt-4.1-nano" checked>
+                  <div class="openai-model-card">
+                    <span class="openai-model-name">GPT-4.1 nano</span>
+                    <span class="openai-model-price">~$0.10/1M tokens • Rẻ nhất</span>
+                  </div>
+                </label>
+                <label class="openai-model-option">
+                  <input type="radio" name="openaiModel" value="gpt-4.1-mini">
+                  <div class="openai-model-card">
+                    <span class="openai-model-name">GPT-4.1 mini</span>
+                    <span class="openai-model-price">~$0.40/1M tokens • Chất lượng cao</span>
+                  </div>
+                </label>
+                <label class="openai-model-option">
+                  <input type="radio" name="openaiModel" value="gpt-4o-mini">
+                  <div class="openai-model-card">
+                    <span class="openai-model-name">GPT-4o mini</span>
+                    <span class="openai-model-price">~$0.15/1M tokens • Đa năng</span>
                   </div>
                 </label>
               </div>
@@ -388,7 +416,7 @@
             <div class="settings-info-grid">
               <div class="info-item">
                 <span class="info-label">Phiên bản</span>
-                <span class="info-value">1.0.0</span>
+                <span class="info-value" id="appVersion">...</span>
               </div>
               <div class="info-item">
                 <span class="info-label">Dữ liệu</span>

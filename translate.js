@@ -227,8 +227,8 @@ async function translateWithGemini(text, fromLang, toLang, onProgress) {
   return { translatedText: translatedLines.join('\n'), detectedLang: fromLang };
 }
 
-// ============ ENGINE: OPENAI GPT-4.1-NANO ============
-async function translateWithOpenAI(text, fromLang, toLang, onProgress) {
+// ============ ENGINE: OPENAI GPT ============
+async function translateWithOpenAI(text, fromLang, toLang, onProgress, openaiModel = 'gpt-4.1-nano') {
   const apiKey = getApiKey('openai');
   if (!apiKey) throw new Error('Chưa cấu hình API key cho OpenAI. Vào Cài đặt API để thêm.');
 
@@ -253,7 +253,7 @@ async function translateWithOpenAI(text, fromLang, toLang, onProgress) {
 
     try {
       const response = await client.chat.completions.create({
-        model: 'gpt-4.1-nano',  // ~$0.10/1M input, $0.40/1M output — rẻ nhất
+        model: openaiModel,  // User-selected model
         messages: [
           {
             role: 'system',
@@ -268,7 +268,7 @@ async function translateWithOpenAI(text, fromLang, toLang, onProgress) {
       translatedLines.push(translated);
 
       const pct = Math.min(100, Math.round(((i + 1) / batches.length) * 100));
-      if (onProgress) onProgress(pct, `[GPT-4.1 nano] Đang dịch... ${pct}%`);
+      if (onProgress) onProgress(pct, `[${openaiModel}] Đang dịch... ${pct}%`);
     } catch (err) {
       console.error(`OpenAI batch ${i + 1} failed:`, err.message);
       translatedLines.push(batchText);
@@ -403,14 +403,16 @@ const ENGINE_MAP = {
   microsoft: translateWithMicrosoft,
 };
 
-async function translateText(text, fromLang, toLang, onProgress, engine = 'google') {
+async function translateText(text, fromLang, toLang, onProgress, engine = 'google', openaiModel = 'gpt-4.1-nano') {
   const translateFn = ENGINE_MAP[engine];
   if (!translateFn) throw new Error(`Engine không hợp lệ: ${engine}`);
+  // Pass openaiModel for OpenAI engine
+  if (engine === 'openai') return translateFn(text, fromLang, toLang, onProgress, openaiModel);
   return translateFn(text, fromLang, toLang, onProgress);
 }
 
 // ============ SRT/VTT TRANSLATION ============
-async function translateSRT(srtContent, fromLang, toLang, onProgress, engine = 'google') {
+async function translateSRT(srtContent, fromLang, toLang, onProgress, engine = 'google', openaiModel = 'gpt-4.1-nano') {
   const content = srtContent.trim();
   const isVTT = content.startsWith('WEBVTT');
 
@@ -455,7 +457,7 @@ async function translateSRT(srtContent, fromLang, toLang, onProgress, engine = '
 
   // Translate all text lines using the selected engine
   const fullText = textLines.join('\n');
-  const result = await translateText(fullText, fromLang, toLang, onProgress, engine);
+  const result = await translateText(fullText, fromLang, toLang, onProgress, engine, openaiModel);
   const translatedParts = result.translatedText.split('\n');
 
   // Rebuild subtitle with translated text

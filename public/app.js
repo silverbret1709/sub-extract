@@ -100,6 +100,10 @@ async function checkDependencies() {
       showSetupGuide(data);
     }
 
+    // Show version in settings
+    const versionEl = $('#appVersion');
+    if (versionEl && data.version) versionEl.textContent = 'v' + data.version;
+
     updateSetupBadge('badgeYtdlp', 'setupYtdlp', data.ytdlp);
     updateSetupBadge('badgeWhisper', 'setupWhisper', data.whisper);
 
@@ -340,11 +344,15 @@ function setupEventListeners() {
   });
   els.btnNewBatch.addEventListener('click', () => resetBatchUI());
 
-  // Engine option selection
+  // Engine option selection + show/hide OpenAI model selector
   $$('.engine-option').forEach(opt => {
     opt.addEventListener('click', () => {
       $$('.engine-option').forEach(o => o.classList.remove('selected'));
       opt.classList.add('selected');
+      // Show OpenAI model selector only when OpenAI is selected
+      const engine = opt.querySelector('input[name="engine"]')?.value;
+      const modelRow = $('#openaiModelRow');
+      if (modelRow) modelRow.style.display = engine === 'openai' ? 'block' : 'none';
     });
   });
 
@@ -769,6 +777,7 @@ async function startBatchTranslate() {
       formData.append('outputMode', outputMode);
       formData.append('outputFolder', outputFolder);
       formData.append('engine', document.querySelector('input[name="engine"]:checked')?.value || 'google');
+      formData.append('openaiModel', document.querySelector('input[name="openaiModel"]:checked')?.value || 'gpt-4.1-nano');
 
       const filesMeta = [];
       selectedFiles.forEach((f, i) => {
@@ -785,7 +794,11 @@ async function startBatchTranslate() {
       res = await fetch('/api/batch-translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: selectedFiles, fromLang, toLang, extractModel, outputMode, outputFolder, engine: document.querySelector('input[name="engine"]:checked')?.value || 'google' })
+        body: JSON.stringify({
+          files: selectedFiles, fromLang, toLang, extractModel, outputMode, outputFolder,
+          engine: document.querySelector('input[name="engine"]:checked')?.value || 'google',
+          openaiModel: document.querySelector('input[name="openaiModel"]:checked')?.value || 'gpt-4.1-nano'
+        })
       });
     }
 

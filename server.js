@@ -208,7 +208,7 @@ const batchUpload = multer({
 
 // Batch translate with uploaded files (from browser file picker)
 app.post('/api/batch-translate-upload', batchUpload.array('files', 500), async (req, res) => {
-  const { fromLang, toLang, extractModel, filesMeta: filesMetaJson, outputMode, outputFolder, engine } = req.body;
+  const { fromLang, toLang, extractModel, filesMeta: filesMetaJson, outputMode, outputFolder, engine, openaiModel } = req.body;
   const uploadedFiles = req.files || [];
 
   if (uploadedFiles.length === 0) {
@@ -259,7 +259,7 @@ app.post('/api/batch-translate-upload', batchUpload.array('files', 500), async (
   res.json({ batchId, status: 'processing' });
 
   // Process files in background
-  processBatchTranslate(batchId, files, fromLang || 'auto', toLang, extractModel || 'base', outputMode || 'same', outputFolder || '', engine || 'google');
+  processBatchTranslate(batchId, files, fromLang || 'auto', toLang, extractModel || 'base', outputMode || 'same', outputFolder || '', engine || 'google', openaiModel || 'gpt-4.1-nano');
 });
 
 
@@ -425,7 +425,7 @@ app.post('/api/scan-folder', (req, res) => {
 
 // Batch translate files from a folder
 app.post('/api/batch-translate', async (req, res) => {
-  const { files, fromLang, toLang, extractModel, outputMode, outputFolder, engine } = req.body;
+  const { files, fromLang, toLang, extractModel, outputMode, outputFolder, engine, openaiModel } = req.body;
   if (!files || files.length === 0) {
     return res.status(400).json({ error: 'Không có file nào được chọn' });
   }
@@ -450,7 +450,7 @@ app.post('/api/batch-translate', async (req, res) => {
   res.json({ batchId, status: 'processing' });
 
   // Process files in background
-  processBatchTranslate(batchId, files, fromLang || 'auto', toLang, extractModel || 'base', outputMode || 'same', outputFolder || '', engine || 'google');
+  processBatchTranslate(batchId, files, fromLang || 'auto', toLang, extractModel || 'base', outputMode || 'same', outputFolder || '', engine || 'google', openaiModel || 'gpt-4.1-nano');
 });
 
 // Get batch job status
@@ -822,7 +822,7 @@ async function translateJob(jobId, fromLang, toLang) {
   }
 }
 
-async function processBatchTranslate(batchId, files, fromLang, toLang, extractModel, outputMode = 'same', outputFolder = '', engine = 'google') {
+async function processBatchTranslate(batchId, files, fromLang, toLang, extractModel, outputMode = 'same', outputFolder = '', engine = 'google', openaiModel = 'gpt-4.1-nano') {
   const batchJob = jobs.get(batchId);
 
   // Determine output directory for custom mode
@@ -903,7 +903,7 @@ async function processBatchTranslate(batchId, files, fromLang, toLang, extractMo
       const translateFn = translateFnType === 'srt' ? translateSRT : translateText;
       const result = await translateFn(subtitleContent, fromLang, toLang, (pct, msg) => {
         batchJob.progress = `Dịch ${file.name}: ${msg}`;
-      }, engine);
+      }, engine, openaiModel);
 
       // Determine output file name (preserve subfolder structure)
       const fileBaseName = path.basename(file.name); // Just the filename without subfolder
