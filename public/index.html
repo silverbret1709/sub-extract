@@ -360,6 +360,30 @@
           </div>
 
           <div class="settings-section">
+            <h3>🔄 Cập nhật & Chia sẻ</h3>
+            <div class="git-controls">
+              <div class="git-status-bar" id="gitStatusBar">
+                <span id="gitStatusText">Đang kiểm tra...</span>
+              </div>
+              <div class="git-actions">
+                <button class="btn btn-sm btn-primary" id="btnGitPush" title="Commit & Push lên GitHub">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg>
+                  Push lên GitHub
+                </button>
+                <button class="btn btn-sm btn-secondary" id="btnGitCheckUpdate" title="Kiểm tra bản mới">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                  Kiểm tra update
+                </button>
+                <button class="btn btn-sm btn-primary" id="btnGitPull" style="display:none;" title="Tải bản mới">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Cập nhật ngay
+                </button>
+              </div>
+              <div class="git-log" id="gitLog" style="display:none;"></div>
+            </div>
+          </div>
+
+          <div class="settings-section">
             <h3>ℹ️ Thông tin</h3>
             <div class="settings-info-grid">
               <div class="info-item">
@@ -587,6 +611,23 @@
     <footer class="footer">
       <p>Sử dụng <strong>Whisper AI</strong> để nhận diện giọng nói • <strong>yt-dlp</strong> để tải video</p>
     </footer>
+  </div>
+  <!-- Custom Modal -->
+  <div class="modal-overlay" id="customModal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <span class="modal-icon" id="modalIcon">🚀</span>
+        <h3 id="modalTitle">Thông báo</h3>
+      </div>
+      <p class="modal-message" id="modalMessage"></p>
+      <div class="modal-input-wrap" id="modalInputWrap" style="display:none;">
+        <input type="text" id="modalInput" placeholder="" autocomplete="off">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-sm btn-secondary" id="modalBtnCancel">Huỷ</button>
+        <button class="btn btn-sm btn-primary" id="modalBtnOk">Xác nhận</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

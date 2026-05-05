@@ -175,6 +175,7 @@ function setupEventListeners() {
         // Hide card header content, show settings card
         if (cardHeader) cardHeader.style.display = 'none';
         if (settingsSection) settingsSection.style.display = 'block';
+        loadGitStatus();
       } else {
         // Show card header, hide settings card
         if (cardHeader) cardHeader.style.display = '';
@@ -1300,3 +1301,177 @@ async function saveModelCacheDir() {
     status.className = 'api-key-status error';
   }
 }
+
+// ============ CUSTOM MODAL ============
+function showModal({ icon = '🚀', title = 'Thông báo', message = '', input = false, placeholder = '', okText = 'Xác nhận', cancelText = 'Huỷ' } = {}) {
+  return new Promise((resolve) => {
+    const overlay = $('#customModal');
+    $('#modalIcon').textContent = icon;
+    $('#modalTitle').textContent = title;
+    $('#modalMessage').textContent = message;
+    const inputWrap = $('#modalInputWrap');
+    const inputEl = $('#modalInput');
+    const btnOk = $('#modalBtnOk');
+    const btnCancel = $('#modalBtnCancel');
+    btnOk.textContent = okText;
+    btnCancel.textContent = cancelText;
+
+    if (input) {
+      inputWrap.style.display = '';
+      inputEl.value = '';
+      inputEl.placeholder = placeholder || '';
+    } else {
+      inputWrap.style.display = 'none';
+    }
+
+    overlay.style.display = 'flex';
+    if (input) setTimeout(() => inputEl.focus(), 100);
+
+    function cleanup() {
+      overlay.style.display = 'none';
+      btnOk.removeEventListener('click', onOk);
+      btnCancel.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onOverlay);
+      inputEl.removeEventListener('keydown', onKey);
+    }
+    function onOk() { cleanup(); resolve(input ? (inputEl.value || '') : true); }
+    function onCancel() { cleanup(); resolve(input ? null : false); }
+    function onOverlay(e) { if (e.target === overlay) onCancel(); }
+    function onKey(e) { if (e.key === 'Enter') onOk(); if (e.key === 'Escape') onCancel(); }
+
+    btnOk.addEventListener('click', onOk);
+    btnCancel.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onOverlay);
+    inputEl.addEventListener('keydown', onKey);
+  });
+}
+
+// ============ GIT CONTROLS ============
+async function loadGitStatus() {
+  const statusEl = $('#gitStatusText');
+  if (!statusEl) return;
+  try {
+    const res = await fetch('/api/git/status');
+    const data = await res.json();
+    if (data.error) {
+      statusEl.textContent = '⚠️ Git chưa được khởi tạo';
+      return;
+    }
+    let info = `📌 Branch: ${data.branch}`;
+    if (data.remote) info += ` | 🔗 ${data.remote}`;
+    info += `\n📝 ${data.lastCommit}`;
+    if (data.changedFiles > 0) info += ` | 📦 ${data.changedFiles} file thay đổi`;
+    statusEl.textContent = info;
+  } catch (e) {
+    statusEl.textContent = '❌ Không thể kết nối server';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Git Push
+  const btnPush = $('#btnGitPush');
+  if (btnPush) {
+    btnPush.addEventListener('click', async () => {
+      const msg = await showModal({ icon: '🚀', title: 'Push lên GitHub', message: 'Nhập mô tả thay đổi (hoặc để trống)', input: true, placeholder: 'Ví dụ: Fix lỗi dịch subtitle...', okText: 'Push' });
+      if (msg === null) return; // cancelled
+      
+      btnPush.disabled = true;
+      btnPush.textContent = '⏳ Đang push...';
+      const log = $('#gitLog');
+      
+      try {
+        const res = await fetch('/api/git/push', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: msg || undefined })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.message, 'success');
+          if (log) { log.textContent = data.output || data.message; log.style.display = 'block'; }
+        } else {
+          showToast(`Lỗi: ${data.error}`, 'error');
+          if (log) { log.textContent = data.error + '\n' + (data.stderr || ''); log.style.display = 'block'; }
+        }
+      } catch (e) {
+        showToast('Lỗi push: ' + e.message, 'error');
+      }
+      
+      btnPush.disabled = false;
+      btnPush.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/></svg> Push lên GitHub';
+      loadGitStatus();
+    });
+  }
+  
+  // Check Update
+  const btnCheck = $('#btnGitCheckUpdate');
+  if (btnCheck) {
+    btnCheck.addEventListener('click', async () => {
+      btnCheck.disabled = true;
+      btnCheck.textContent = '⏳ Đang kiểm tra...';
+      const log = $('#gitLog');
+      const btnPull = $('#btnGitPull');
+      
+      try {
+        const res = await fetch('/api/git/check-update');
+        const data = await res.json();
+        
+        if (data.status === 'up-to-date') {
+          showToast('✅ Đang dùng bản mới nhất!', 'success');
+          if (log) { log.textContent = `Local: ${data.localHash} | Remote: ${data.remoteHash}\n${data.remoteLog}`; log.style.display = 'block'; }
+          if (btnPull) btnPull.style.display = 'none';
+        } else if (data.status === 'behind') {
+          showToast(`🔔 Có ${data.behind} bản cập nhật mới!`, 'info');
+          if (log) { log.textContent = `Bản mới nhất: ${data.remoteLog}`; log.style.display = 'block'; }
+          if (btnPull) btnPull.style.display = '';
+        } else if (data.status === 'error') {
+          showToast('⚠️ Chưa kết nối remote. Cần thêm remote origin trước.', 'error');
+          if (log) { log.textContent = data.error; log.style.display = 'block'; }
+        } else {
+          showToast(`Trạng thái: ${data.status}`, 'info');
+        }
+      } catch (e) {
+        showToast('Lỗi: ' + e.message, 'error');
+      }
+      
+      btnCheck.disabled = false;
+      btnCheck.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Kiểm tra update';
+    });
+  }
+  
+  // Pull Update
+  const btnPull = $('#btnGitPull');
+  if (btnPull) {
+    btnPull.addEventListener('click', async () => {
+      const ok = await showModal({ icon: '⬇️', title: 'Cập nhật app', message: 'Tải bản mới từ GitHub? Server sẽ cần restart sau khi cập nhật.', okText: 'Cập nhật' });
+      if (!ok) return;
+      
+      btnPull.disabled = true;
+      btnPull.textContent = '⏳ Đang cập nhật...';
+      const log = $('#gitLog');
+      
+      try {
+        const res = await fetch('/api/git/pull', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('✅ ' + data.message + (data.npmUpdated ? ' (đã cập nhật dependencies)' : ''), 'success');
+          if (log) { log.textContent = data.output + '\n\nCommit: ' + data.latestCommit; log.style.display = 'block'; }
+          // Suggest reload
+          setTimeout(async () => {
+            const reload = await showModal({ icon: '✅', title: 'Cập nhật thành công!', message: 'Reload trang để áp dụng thay đổi mới?', okText: 'Reload', cancelText: 'Để sau' });
+            if (reload) location.reload();
+          }, 1500);
+        } else {
+          showToast('Lỗi: ' + data.error, 'error');
+        }
+      } catch (e) {
+        showToast('Lỗi pull: ' + e.message, 'error');
+      }
+      
+      btnPull.disabled = false;
+      btnPull.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Cập nhật ngay';
+      btnPull.style.display = 'none';
+      loadGitStatus();
+    });
+  }
+});

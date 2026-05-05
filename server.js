@@ -973,15 +973,79 @@ async function processBatchTranslate(batchId, files, fromLang, toLang, extractMo
   console.log(`[batch:${batchId}] Batch complete: ${batchJob.completedFiles}/${files.length}`);
 }
 
-// ============ START SERVER ============
+// ============ GIT PUSH / UPDATE API ============
+app.get('/api/git/status', (req, res) => {
+  try {
+    const status = execSync('git status --porcelain', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    const branch = execSync('git branch --show-current', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    let remote = '';
+    try { remote = execSync('git remote get-url origin', { cwd: __dirname, encoding: 'utf-8' }).trim(); } catch {}
+    const log = execSync('git log -1 --format="%h %s (%cr)"', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    res.json({ branch, remote, lastCommit: log, changedFiles: status ? status.split('\n').length : 0, changes: status });
+  } catch (e) {
+    res.json({ error: 'Git chưa được khởi tạo', message: e.message });
+  }
+});
 
+app.post('/api/git/push', (req, res) => {
+  try {
+    const { message } = req.body;
+    const commitMsg = message || `Update ${new Date().toLocaleString('vi-VN')}`;
+    execSync('git add -A', { cwd: __dirname, encoding: 'utf-8' });
+    const status = execSync('git status --porcelain', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    let committed = false;
+    if (status) {
+      execSync(`git commit -m "${commitMsg.replace(/"/g, '\\"')}"`, { cwd: __dirname, encoding: 'utf-8' });
+      committed = true;
+    }
+    const pushResult = execSync('git push origin HEAD 2>&1', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    res.json({ success: true, committed, message: committed ? `Đã commit & push: ${commitMsg}` : 'Không có thay đổi mới', output: pushResult });
+  } catch (e) {
+    res.status(500).json({ error: e.message, stderr: e.stderr?.toString() || '' });
+  }
+});
+
+app.get('/api/git/check-update', (req, res) => {
+  try {
+    execSync('git fetch origin 2>&1', { cwd: __dirname, encoding: 'utf-8', timeout: 30000 });
+    const local = execSync('git rev-parse HEAD', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    const remote = execSync('git rev-parse @{u}', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    const base = execSync('git merge-base HEAD @{u}', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    let status = 'up-to-date';
+    let behind = 0;
+    if (local !== remote) {
+      if (base === local) { status = 'behind'; behind = parseInt(execSync('git rev-list HEAD..@{u} --count', { cwd: __dirname, encoding: 'utf-8' }).trim()); }
+      else if (base === remote) { status = 'ahead'; }
+      else { status = 'diverged'; }
+    }
+    const remoteLog = execSync('git log @{u} -1 --format="%h %s (%cr)"', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    res.json({ status, behind, localHash: local.substring(0, 7), remoteHash: remote.substring(0, 7), remoteLog });
+  } catch (e) {
+    res.json({ status: 'error', error: e.message });
+  }
+});
+
+app.post('/api/git/pull', (req, res) => {
+  try {
+    const result = execSync('git pull origin HEAD 2>&1', { cwd: __dirname, encoding: 'utf-8', timeout: 60000 });
+    let npmUpdated = false;
+    if (result.includes('package.json') || result.includes('package-lock.json')) {
+      execSync('npm install --production 2>&1', { cwd: __dirname, encoding: 'utf-8', timeout: 120000 });
+      npmUpdated = true;
+    }
+    const log = execSync('git log -1 --format="%h %s (%cr)"', { cwd: __dirname, encoding: 'utf-8' }).trim();
+    res.json({ success: true, message: 'Cập nhật thành công!', npmUpdated, latestCommit: log, output: result.trim() });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ============ START SERVER ============
 app.listen(PORT, () => {
   console.log(`\n╔══════════════════════════════════════════════════╗`);
   console.log(`║   Video Subtitle Extractor                       ║`);
   console.log(`║   http://localhost:${PORT}                          ║`);
   console.log(`╚══════════════════════════════════════════════════╝\n`);
-
-  // Check dependencies
   const ytdlp = checkYtDlp();
   const whisper = checkWhisper();
   console.log(`  yt-dlp:   ${ytdlp ? '✅ Đã cài đặt' : '❌ Chưa cài - chạy: pip install yt-dlp'}`);
