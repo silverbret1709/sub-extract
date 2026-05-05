@@ -362,14 +362,6 @@ function setupEventListeners() {
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
   });
 
-  // File type filters
-  $$('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      $$('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      applyFileFilter(btn.dataset.filter);
-    });
-  });
 }
 
 // ============ EXTRACT ACTIONS ============
@@ -454,7 +446,7 @@ function handleFolderPicked(fileList, folderName) {
   if (!fileList || fileList.length === 0) return;
 
   const videoExts = ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.mp3', '.wav', '.m4a', '.flac', '.ogg'];
-  const subtitleExts = ['.txt', '.srt', '.vtt', '.sub', '.ass', '.ssa'];
+  const subtitleExts = ['.srt', '.vtt', '.sub', '.ass', '.ssa'];
   const allExts = [...videoExts, ...subtitleExts];
 
   // Get folder name from webkitRelativePath if not provided
@@ -463,13 +455,12 @@ function handleFolderPicked(fileList, folderName) {
     folderName = firstRelPath.split('/')[0] || 'Selected folder';
   }
 
-  // Filter relevant files (only top-level, skip deep subfolders)
-  const items = [];
-  const fileMap = new Map(); // baseName -> { video, subtitle }
+  // Collect subtitles and videos separately
+  const subtitleItems = [];
+  const videoItems = [];
 
   for (const file of fileList) {
     const relPath = file.webkitRelativePath || file.name;
-    // Display name: strip root folder prefix, keep subfolder structure
     const parts = relPath.split('/');
     const displayName = parts.length > 1 ? parts.slice(1).join('/') : file.name;
 
@@ -478,50 +469,41 @@ function handleFolderPicked(fileList, folderName) {
     if (!allExts.includes(ext)) continue;
 
     const isSubtitle = subtitleExts.includes(ext);
-
-    items.push({
+    const item = {
       name: displayName,
-      file, // Keep File object for upload
+      file,
       path: relPath,
       type: isSubtitle ? 'subtitle' : 'video',
-      hasSubtitle: false, // Will be determined below
+      hasSubtitle: isSubtitle,
       size: file.size,
-    });
+    };
 
-    // Use directory-aware baseName for matching (e.g. "subfolder/video" matches "subfolder/video.srt")
-    const dirPrefix = displayName.includes('/') ? displayName.substring(0, displayName.lastIndexOf('/') + 1) : '';
-    const baseName = dirPrefix + name.substring(0, name.lastIndexOf('.'));
-    if (!fileMap.has(baseName)) fileMap.set(baseName, { video: null, subtitle: null });
-    if (isSubtitle) fileMap.get(baseName).subtitle = displayName;
-    else fileMap.get(baseName).video = displayName;
+    if (isSubtitle) subtitleItems.push(item);
+    else videoItems.push(item);
   }
 
-  // Mark videos that have matching subtitle files
-  for (const item of items) {
-    if (item.type === 'video') {
-      const dirPrefix = item.name.includes('/') ? item.name.substring(0, item.name.lastIndexOf('/') + 1) : '';
-      const fileName = item.name.includes('/') ? item.name.split('/').pop() : item.name;
-      const baseName = dirPrefix + fileName.substring(0, fileName.lastIndexOf('.'));
-      const entry = fileMap.get(baseName);
-      item.hasSubtitle = !!(entry && entry.subtitle);
-    } else {
-      item.hasSubtitle = true;
-    }
-  }
+  // Smart filtering: if subtitles exist, only show subtitles
+  const hasSubtitles = subtitleItems.length > 0;
+  const items = hasSubtitles ? subtitleItems : videoItems;
 
   if (items.length === 0) {
     showToast('Không tìm thấy file video/subtitle trong thư mục', 'error');
     return;
   }
 
+  const mode = hasSubtitles ? 'subtitles-only' : 'videos-only';
+  console.log(`[folder] ${folderName}: ${subtitleItems.length} subtitles, ${videoItems.length} videos → ${mode}`);
+
   state.scannedFiles = items;
   state.browserPicked = true;
   renderFileList(items);
   els.scanResults.style.display = 'block';
-  els.scanCount.textContent = `${items.length} files`;
+  els.scanCount.textContent = hasSubtitles
+    ? `${items.length} subtitle files (bỏ qua ${videoItems.length} video)`
+    : `${items.length} video files`;
   els.folderInput.value = folderName;
 
-  const hasVideoWithoutSub = items.some(f => f.type === 'video' && !f.hasSubtitle);
+  const hasVideoWithoutSub = !hasSubtitles && videoItems.length > 0;
   els.extractModelRow.style.display = hasVideoWithoutSub ? 'flex' : 'none';
 
   // Show output folder selection - always show 'same folder' option
@@ -683,16 +665,10 @@ function renderFileList(items) {
     `;
     els.fileList.appendChild(div);
   });
-
-  // Reset filter to "all"
-  $$('.filter-btn').forEach(b => b.classList.remove('active'));
-  $('.filter-btn[data-filter="all"]')?.classList.add('active');
-  updateFilterCount();
 }
 
 function toggleAllFiles(checked) {
-  // Only affect visible (not hidden by filter) items
-  els.fileList.querySelectorAll('.file-item:not([style*="display: none"]) input[type="checkbox"]').forEach(cb => cb.checked = checked);
+  els.fileList.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = checked);
 }
 
 function clearFileList() {

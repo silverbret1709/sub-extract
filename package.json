@@ -1,6 +1,6 @@
 {
   "name": "video-subtitle-extractor",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Trích xuất subtitle từ video TikTok/Facebook thành file text",
   "main": "server.js",
   "scripts": {
